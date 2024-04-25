@@ -7,7 +7,9 @@
 ;
 ;---------------------------------------------------
 
-
+globals [
+ numPrisoners ; Number of prisoners
+]
 ;---- Specific, local variables of citizen-agents
 citizens-own [
   ;cvision;-----------citizen-vision is set by ruler 'citizen-vision'
@@ -61,6 +63,7 @@ citizens-own [
   
   ;different help-variables
   counter; -----------general purpose counter
+ 
   
 ]
 
@@ -87,6 +90,7 @@ to setup-citizens
     set destinationxy []
     set walkdesire? false
     set counter 0 ; all-purpose counter
+    set numPrisoners 0
   ]
 
 end
@@ -137,6 +141,7 @@ to gotoprison
   ; set flag
   set inPrison? true
   set color red
+  set numPrisoners numPrisoners + 1
   ; move to prison into an own cell (=own patch)
   let prisoncell one-of patches with [not any? turtles-here and region = "Prison"]
   ifelse (prisoncell != nobody) [move-to one-of patches with [not any? turtles-here and region = "Prison"]]
@@ -151,14 +156,15 @@ to bidePrisonTime
   set jailterm jailterm + 1 ;counting the time in prison
   if Debug [print (word "citizen " who "is in prison since: " jailterm)]
   if jailterm > jailsentence [; released from prison
-      set jailterm 0
-      ; move forward where there are no cops and is not prison
-      ;let places neighborhood with [not any? cops-here and region != "Prison"]
-      let places neighborhood with [not any? cops-here and region = "empty" or region = "TownSquare"]
-      if any? places [move-to one-of places]
-      set inPrison? false
-      set color yellow
-      if Debug [print (word "citizen " who "is released from prison") ]
+    set jailterm 0
+    ; move forward where there are no cops and is not prison
+    ;let places neighborhood with [not any? cops-here and region != "Prison"]
+    let places neighborhood with [not any? cops-here and region = "empty" or region = "TownSquare"]
+    if any? places [move-to one-of places]
+    set inPrison? false
+    set color yellow
+    set numPrisoners numPrisoners - 1
+    if Debug [print (word "citizen " who "is released from prison") ]
   ]
 end
 

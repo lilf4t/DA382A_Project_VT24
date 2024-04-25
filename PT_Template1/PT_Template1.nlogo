@@ -72,6 +72,9 @@ globals [
   locCinema; location of the entertainment-place
   locRestaurant; location of the restaurant
   locSocialEvents; location of the volunteer place
+  numFreeCitizens
+  newarrest
+
 ]
 
 ;---- General agent variables
@@ -98,7 +101,9 @@ to setup
   ; define global variables that are not set as sliders
   set max-jailterm 10
 
+  set numFreeCitizens 0
 
+  set newarrest 0
   ; setup of the environment:
   setup-environment ;
   ; setup of all patches
@@ -139,10 +144,16 @@ to go
     ; based on the type of agent
     if (breed = citizens) [
       citizen_behavior ; code as defined in the include-file "citizens.nls"
+
+      set L (1 / (exp((newarrest / num-citizens))))
+
+      count-new-arrests
+
       ]
     if (breed = cops) [
       cop_behavior ; code as defined in the include-file "cops.nls"
       ]
+
   ]
 
   ;recorder
@@ -160,6 +171,16 @@ end ; - to go part
 
 
 ;-----------------------
+
+to count-free-citizens
+  let free-citizens (citizens with [(color = white or color = yellow) and not inPrison?])
+  set numFreeCitizens count free-citizens
+end
+
+to count-new-arrests
+  let new-arrest (citizens with [(color = red) and inPrison?])
+  set newarrest count new-arrest
+end
 
 
 ; TIME FUNCTIONS
@@ -241,17 +262,17 @@ num-citizens
 num-citizens
 1
 150
-4.0
+79.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-22
-24
-85
-57
+464
+34
+527
+67
 setup
 setup
 NIL
@@ -265,10 +286,10 @@ NIL
 1
 
 BUTTON
-21
-73
-84
-106
+463
+83
+526
+116
 go
 go
 T
@@ -290,7 +311,7 @@ num-cops
 num-cops
 0
 150
-5.0
+61.0
 1
 1
 NIL
@@ -320,7 +341,7 @@ cop-vision
 cop-vision
 1
 100
-1.0
+67.9
 0.1
 1
 NIL
@@ -451,6 +472,56 @@ Debug
 0
 1
 -1000
+
+PLOT
+211
+213
+411
+363
+Legitimacy
+NIL
+NIL
+0.0
+1.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot L"
+
+MONITOR
+47
+66
+173
+111
+NIL
+newarrest
+17
+1
+11
+
+MONITOR
+215
+158
+328
+203
+NIL
+L
+17
+1
+11
+
+CHOOSER
+292
+408
+474
+453
+copSource
+copSource
+"rule-of-law" "arrest-troublemakers"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -817,7 +888,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.3.0
+NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
