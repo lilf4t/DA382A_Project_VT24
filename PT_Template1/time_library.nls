@@ -10,50 +10,10 @@ globals
   sim-start-logotime
 
   timeTaker-stop-time
-  flag?
+ 
 ]
 
-;========================================================================================================================
-to setup
-  clear-all
 
-  initTime
-
-  set timeTaker-stop-time 0
-  set flag? true
-
-  reset-ticks
-end
-
-;========================================================================================================================
-to go
-
-  tick ;- update time
-
-
-  ;UPDATES THE VALUE OF TIME-SIMULATED FOR DISPLAY PURPOSE
-  set time-simulated (word (time:difference-between sim-start-time sim-time "minute") " minutes")
-
-
-  timeWrapAround
-  if isWeekend
-  [print "weeknd"]
-
-
-
-  ;EXAMPLE OF HOW TO TEST timeTaker, USES flag? ONLY HERE FOR THE TEST CIRCUMSTANCES.
-  if flag?
-  [
-    set timeTaker-stop-time timeTaker 0 30
-    set flag? false
-  ]
-
-  if timeTakerDone
-  [
-    print "timer done"
-  ]
-
-end ;
 ;=======================================================================================================================================
 ;INITIALIZATION OF TIME.
 to initTime

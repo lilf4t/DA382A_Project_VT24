@@ -22,6 +22,7 @@ __includes [
     "cops.nls"; code for cop agents
     "bdi.nls" ; contains the extension code for bdi with beliefs hash-tables and intention stacks
     "communication.nls"; contains the extension for FIPA-like communication protocols
+    "time_library.nls"; code for the time extension library
     "vid.nls" ; contains the code for the recorder. You also need to activate the vid-extension and the command at the end of setup
 ]
 ; ********************end included files ********
@@ -113,7 +114,8 @@ to setup
   ;---- setup cops
   setup-cops
 
-
+  ; time section
+  initTime ; initialize the time and clock variables
 
   ; must be last in the setup-part:
   reset-ticks
@@ -136,6 +138,18 @@ to go
   ;
   tick ;- update time
   update-time-flags ;- update time
+
+  ;UPDATES THE VALUE OF TIME-SIMULATED FOR DISPLAY PURPOSE
+  set time-simulated (word (time:difference-between sim-start-time sim-time "minute") " minutes")
+
+ ; if timeTakerDone
+ ; [
+ ;   print "timer done"
+ ; ]
+
+  timeWrapAround
+  if isWeekend
+  [print "weeknd"]
 
   ;---- Agents to-go part -------------
   ; Cyclic execution of what the agents are supposed to do
@@ -326,7 +340,7 @@ citizen-vision
 citizen-vision
 1
 10
-1.0
+0.0
 0.1
 1
 NIL
@@ -522,6 +536,28 @@ copSource
 copSource
 "rule-of-law" "arrest-troublemakers"
 0
+
+MONITOR
+221
+60
+327
+105
+show-time
+show-time
+0
+1
+11
+
+MONITOR
+219
+108
+328
+153
+time-simulated
+time-simulated
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -888,7 +924,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.4.0
+NetLogo 6.3.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
