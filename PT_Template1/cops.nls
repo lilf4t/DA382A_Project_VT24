@@ -50,6 +50,7 @@ to cop_behavior
   ;
   ; suspects = citizens nearby?
   let suspect one-of citizens-here with [inPrison? = false] ; need to make sure the citizen is not in jail, otherwise can the cop be trapped besides
+  if any? citizens-here with [inPrison? = false] [ask suspect [ set fear (1 + 5 * f) * fear ]]
   let hunted one-of other citizens with [inPrison? = false] in-radius cop-vision
   
   ;---test purpose
