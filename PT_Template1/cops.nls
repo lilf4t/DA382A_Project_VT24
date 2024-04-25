@@ -10,6 +10,8 @@
 ;---------------------------------------------------
 
 ;---- Specific, local variables of cop-agents
+
+
 cops-own [
   ;pvision ; cop-vision is set by slider
   cop-speed
@@ -52,7 +54,15 @@ to cop_behavior
   
   ;---test purpose
   ;set destinationxy one-of patches with [region = "Restaurant"]
-  set order "rule-of-law"
+  if copSource = "rule-of-law" [
+    set order "rule-of-law"
+  ] 
+  if copSource = "arrest-troublemakers"
+[
+  set order "arrest-troublemakers"
+
+  ]
+  ;set order "rule-of-law"
   ;set order "arrest-troublemakers"
 
     

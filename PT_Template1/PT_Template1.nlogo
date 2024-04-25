@@ -521,7 +521,7 @@ CHOOSER
 copSource
 copSource
 "rule-of-law" "arrest-troublemakers"
-0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
