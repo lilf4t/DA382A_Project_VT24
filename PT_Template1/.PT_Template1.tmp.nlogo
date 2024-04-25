@@ -276,7 +276,7 @@ num-citizens
 num-citizens
 1
 150
-50.0
+27.0
 1
 1
 NIL
@@ -325,7 +325,7 @@ num-cops
 num-cops
 0
 150
-30.0
+19.0
 1
 1
 NIL
@@ -340,7 +340,7 @@ citizen-vision
 citizen-vision
 1
 10
-3.0
+0.0
 0.1
 1
 NIL
@@ -355,7 +355,7 @@ cop-vision
 cop-vision
 1
 100
-9.0
+67.9
 0.1
 1
 NIL

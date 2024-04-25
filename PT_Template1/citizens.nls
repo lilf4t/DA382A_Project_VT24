@@ -91,6 +91,9 @@ to setup-citizens
     set walkdesire? false
     set counter 0 ; all-purpose counter
     set numPrisoners 0
+    set f 0.05
+    set fear 0.01
+    set risk random-float 1.0
   ]
 
 end
@@ -102,14 +105,17 @@ to citizen_behavior
   
 ;---- cops nearby, which one is the nearest? How many cops, how many citizens?
 let nearby-police other cops in-radius citizen-vision
-if any? nearby-police [let police min-one-of nearby-police [distance myself]]; identify the cop that is nearest  
-set A count nearby-police
+if any? nearby-police [let police min-one-of nearby-police [distance myself]]; identify the cop that is nearest
+  update-A nearby-police
+  update-C
+set A count nearby-police  ; TODO: choose which method to update varables, are they needed elsewhere?
 set C count (other citizens in-radius citizen-vision)
 ; ---- identify a path to escape to if needed
 let hidingplaces neighborhood with [not any? cops-here and region = "empty" or region = "TownSquare"]
 ;--- save local position
 set localxy patch-here
-  
+
+set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updated here
 ;---test purpose
 ;set destinationxy one-of patches with [region = "Restaurant"]
 
@@ -138,6 +144,8 @@ end
 
 ; if asked to go to prison  
 to gotoprison 
+  set fear (1 + 10 * f) * fear
+  print (word "citizen " who " has fear: " fear)
   ; set flag
   set inPrison? true
   set color red
@@ -169,6 +177,7 @@ to bidePrisonTime
 end
 
 to hideFromCops [nearby-police hidingplaces]
+  set fear (1 + f) * fear
   let police min-one-of nearby-police [distance myself]
   if Debug [print (word " citizen: " who " hiding from cop: " police)]
   
@@ -265,6 +274,9 @@ end
 
 to meeting
   if Debug [print (word who " is in the proactive state MeetingFriends")]
+  ;ifelse (ask friendList [fearValue]) > fear 
+  ;[ set fear (1 + f) * fear ]
+  ;[ set fear (1 - f) * fear ] TODO: ask friend
 end
 
 to go_out
@@ -281,3 +293,39 @@ to demonstrate
 end
 
 ;""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+to-report fearValue  ; This is to get the fear of a friend
+  report fear
+end
+
+to update_fear  ; Call this when calibrating weekly fear 
+  set fear 0.5 * (glbFear + fear)
+end
+
+to update-A [nearby-police]  ; Keeping track of nearby police
+  set A count nearby-police
+end
+
+to update-C  ; Keeping track of nearby citizens
+  set C count (other citizens in-radius citizen-vision)
+end
+
+to decrease-frustration  ; decrease frustration TODO: implement when
+ set vfrust vfrust * (1 - exp(- alfaFrust))
+end
+
+to increase-frustration  ; increases frustration TODO: implement when the cops forbid citizens to do what they want
+  set vfrust vfrust + 1
+end
+
+to update-anger
+  set anger vfrust * (1 - L)
+end
+
+to increase-anger
+  ifelse inPrison? [set anger anger * ( 1 + 0.1 * percAnger)][ set anger anger * ( 1 + percAnger)]
+end
+
+to decrease-anger
+  set anger anger * (1 - 10 * percAnger)
+end
