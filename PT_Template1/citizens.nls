@@ -230,10 +230,18 @@ to proactiveBehavior
   ; OBS: when changing a current state to a new and different state, some variables might need to be reset,
   ; like for example walkdesire?, destinationxy, etc.
   ;
+  let demoUtil demonstration-utility
+  let resigUtil resignation-utility
+  
+  if (demoUtil > resigUtil) [set proState "Demonstration"]
+  
+  if (resigUtil > demoUtil) [set proState "Resignation"]
+  
+  
   
   ; For testing
-  set proState item (random 3) StateList
-  if Debug [print (word who "deliberated proState = " proState)]
+  ;set proState item (random 3) StateList
+  ;if Debug [print (word who "deliberated proState = " proState)]
   
   
   ; "Finite State Machine" 
@@ -247,6 +255,7 @@ to proactiveBehavior
     proState = "Political" [political]
     proState = "Demonstration" [demonstrate]   
     ; add more states here, the order does not matter
+    proState = "Resignation" [resignation]
   )
  
   
@@ -292,7 +301,37 @@ to demonstrate
   if Debug [print (word who " is in the proactive state Demonstration")]
 end
 
+to resignation
+  if Debug [print (word who " is in the proactive state Resignation")]
+end
+
+
 ;""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+to-report demonstration-utility
+  
+  let utility 0
+  
+  if (anger > thrAnger) [
+    set utility utility + (anger - thrAnger)
+  ]
+  if (anger > fear) [
+    set utility utility + (anger - fear)
+  ]
+  report utility
+end
+
+to-report resignation-utility
+  
+  let utility 0
+  
+  if (anger > thrAnger) and (fear > anger) [
+    set utility utility + (fear - anger)
+  ]
+
+  report utility
+end
+
 
 to-report fearValue  ; This is to get the fear of a friend
   report fear
