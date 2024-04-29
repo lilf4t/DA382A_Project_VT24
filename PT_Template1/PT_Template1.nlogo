@@ -1,14 +1,8 @@
-; DIS-PT_chpt6
+; DA382A_Project_VT24
 ; template for the programming task with cops and citizen agents
 ;
-; HOW TO WORK WITH THIS FILE:
+; See the description in the file README on GitHub on how to work with the project files
 ;
-; 1. Bransch this file from Github for your group
-; 2. Divide the work from the task to your group members, so that every group member has at least one own task
-; 3. Make individual bransches per group member from the group-bransch that you made under 1.
-; 4. Start with your individual tasks development and make push- and pulls between your individual bransches as needed
-; 5. When the individual tasks are finished you need to merge the different parts back into the original group-bransch
-; 6. Make sure that the final version works before uploading it under PT_chpt6 on Canvas.
 ;
 ;
 
@@ -50,8 +44,9 @@ globals [
   Jmax;---------------------Maximum jail term that a citizen can be sentenced to
 
 
-  ; Global variables that are observed to monitor the dynamics and the result of the simulation
+  ; Global variables for the Observer to monitor the dynamics and the result of the simulation
   max-jailterm
+  numPrisoners ; Number of prisoners
 
 
   ;----- Time variables
@@ -102,16 +97,19 @@ to setup
   ; define global variables that are not set as sliders
   set max-jailterm 10
 
+  ; initialize general global variables (could also be moved to setup-environment)
   set numFreeCitizens 0
-
+  set numPrisoners 0
   set newarrest 0
+
   ; setup of the environment:
   setup-environment ;
   ; setup of all patches
 
   ; setup citizens
   setup-citizens
-  ;---- setup cops
+
+  ; setup cops
   setup-cops
 
   ; time section
@@ -134,7 +132,7 @@ end
 ; ########################## TO GO/ STARTING PART ########################
 ;;
 to go
-  ;---- Basic functions, like setting the time
+  ;---- Time updates
   ;
   tick ;- update time
   update-time-flags ;- update time
@@ -142,14 +140,16 @@ to go
   ;UPDATES THE VALUE OF TIME-SIMULATED FOR DISPLAY PURPOSE
   set time-simulated (word (time:difference-between sim-start-time sim-time "minute") " minutes")
 
- ; if timeTakerDone
- ; [
- ;   print "timer done"
- ; ]
-
   timeWrapAround
-  if isWeekend
-  [print "weeknd"]
+
+
+  ;---- Update of Global Variables
+  ; update of global variables like for example fear, frustration and legitimation
+  ;
+
+  ; update for the observer functions like changes in number of arrests
+  ;
+
 
   ;---- Agents to-go part -------------
   ; Cyclic execution of what the agents are supposed to do
@@ -170,6 +170,11 @@ to go
 
   ]
 
+
+
+
+
+
   ;recorder
  if vid:recorder-status = "recording" [
     if Source = "Only View" [vid:record-view] ; records the plane
@@ -186,58 +191,13 @@ end ; - to go part
 
 ;-----------------------
 
-to count-free-citizens
-  let free-citizens (citizens with [(color = white or color = yellow) and not inPrison?])
-  set numFreeCitizens count free-citizens
+to-report count-free-citizens
+  report count citizens with [not inPrison?]
 end
 
 to count-new-arrests
   let new-arrest (citizens with [(color = red) and inPrison?])
   set newarrest count new-arrest
-end
-
-
-; TIME FUNCTIONS
-to update-time-flags
-  ; The time is measured in ticks where one tick is an hour.
-  ; The time is tracked in the time variable and this variable is
-  ; reset every week (or every 168 hours).
-
-
-
-  ; Set the time
-  set time (time + 1)
-  set time time mod 168
-
-
-  ; Determine if it is morning, evening or weekend
-  let hour-of-day time mod 24
-
-  ifelse (6 <= hour-of-day and hour-of-day <= 10)[
-    set flagMorning true
-  ] [
-  set flagMorning false
-  ]
-
-
-
-  ; Check if it is evening
-  ifelse (16 <= hour-of-day and hour-of-day <= 22)[
-    set flagEvening true
-
-  ] [
-    set flagEvening false
-  ]
-
-  ; Check if it is weekend
-  ifelse (time >= 120) [
-    set flagWeekend true
-  ] [
-    set flagWeekend false
-  ]
-
-  ;if Debug [print word "Time: " time]
-
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -276,7 +236,7 @@ num-citizens
 num-citizens
 1
 150
-50.0
+6.0
 1
 1
 NIL
@@ -325,7 +285,7 @@ num-cops
 num-cops
 0
 150
-30.0
+9.0
 1
 1
 NIL
@@ -535,7 +495,7 @@ CHOOSER
 copSource
 copSource
 "rule-of-law" "arrest-troublemakers"
-1
+0
 
 MONITOR
 221
@@ -555,6 +515,17 @@ MONITOR
 153
 time-simulated
 time-simulated
+0
+1
+11
+
+MONITOR
+48
+141
+165
+186
+NIL
+count-free-citizens
 0
 1
 11

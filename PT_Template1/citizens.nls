@@ -7,9 +7,6 @@
 ;
 ;---------------------------------------------------
 
-globals [
- numPrisoners ; Number of prisoners
-]
 ;---- Specific, local variables of citizen-agents
 citizens-own [
   ;cvision;-----------citizen-vision is set by ruler 'citizen-vision'
@@ -63,11 +60,13 @@ citizens-own [
   
   ;different help-variables
   counter; -----------general purpose counter
- 
+  finishedState;------indicates that a state is fulfilled and a new one can be deliberated
+  initialCondition;---flag to indicate if the initial condition is met
+  finalCondition; ----flag to indicate if the final condition is met
+  safespot;---------- indicates if the current spot is save (not empty and not TownSquare)
+  agTimer1;---------- local timer for agents
   
 ]
-
-
 
 
 
@@ -90,10 +89,12 @@ to setup-citizens
     set destinationxy []
     set walkdesire? false
     set counter 0 ; all-purpose counter
-    set numPrisoners 0
     set f 0.05
     set fear 0.01
     set risk random-float 1.0
+    set finishedState false
+    set initialCondition false
+    set finalCondition false
   ]
 
 end
@@ -101,26 +102,28 @@ end
 
 to citizen_behavior
   
-;########## Updating the Beliefs, e.g. the agent's information about its environment ##############
+;########## UPDATING the Beliefs, e.g. the agent's information about its environment ##############
   
 ;---- cops nearby, which one is the nearest? How many cops, how many citizens?
 let nearby-police other cops in-radius citizen-vision
 if any? nearby-police [let police min-one-of nearby-police [distance myself]]; identify the cop that is nearest
-  update-A nearby-police
-  update-C
 set A count nearby-police  ; TODO: choose which method to update varables, are they needed elsewhere?
 set C count (other citizens in-radius citizen-vision)
+
 ; ---- identify a path to escape to if needed
 let hidingplaces neighborhood with [not any? cops-here and region = "empty" or region = "TownSquare"]
+
 ;--- save local position
 set localxy patch-here
+  
+;check if local spot is safe (one can use the values of patch-here as if it is part of the turtle!)
+ifelse (region != "empty" and region != "TownSquare") [set safespot true][set safespot false]
 
+;--- update the local values for pArrest, risk, fear, etc
 set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updated here
-;---test purpose
-;set destinationxy one-of patches with [region = "Restaurant"]
-
-    
-    
+;--- update once a week
+; if new_week (old_week - current_week = 1)
+  ;update_fear
 
 ;################## REACTIVE BEHAVIOR ####################################
 ; subsumption hierarchy with highest priority in first if-sentence
@@ -130,7 +133,7 @@ set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updat
     ;add all the reactive behavior in order of their priorities- highest at the top of the list
     inPrison? [bidePrisonTime]
     ;(A > 1) and (any? nearby-police) [hideFromCops nearby-police hidingplaces]
-    any? nearby-police [hideFromCops nearby-police hidingplaces]
+    any? nearby-police and not safespot [hideFromCops nearby-police hidingplaces]
     ;destinationxy != [] [moveToDestxy]
     (destinationxy != []) and (destinationxy != localxy) [moveToDestxy]
     walkdesire? [moveAround]
@@ -140,16 +143,47 @@ set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updat
   
 end
 
-;"""""""""""""""""" Intentions """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+;""""""""""""""" Update Functions """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+to-report fearValue  ; This is to get the fear of a friend
+  report fear
+end
+
+to update_fear  ; Call this when calibrating weekly fear 
+  set fear 0.5 * (glbFear + fear)
+end
+
+
+to decrease-frustration  ; decrease frustration TODO: implement when
+ set vfrust vfrust * (1 - exp(- alfaFrust))
+end
+
+to increase-frustration  ; increases frustration TODO: implement when the cops forbid citizens to do what they want
+  set vfrust vfrust + 1
+end
+
+to update-anger
+  set anger vfrust * (1 - L)
+end
+
+to increase-anger
+  ifelse inPrison? [set anger anger * ( 1 + 0.1 * percAnger)][ set anger anger * ( 1 + percAnger)]
+end
+
+to decrease-anger
+  set anger anger * (1 - 10 * percAnger)
+end
+    
+
+;"""""""""""""""""" Reactive Intention-Functions """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 ; if asked to go to prison  
 to gotoprison 
-  set fear (1 + 10 * f) * fear
+  set fear (1 + 10 * f) * fear ; change this to a function in the update function section!
   print (word "citizen " who " has fear: " fear)
   ; set flag
   set inPrison? true
   set color red
-  set numPrisoners numPrisoners + 1
   ; move to prison into an own cell (=own patch)
   let prisoncell one-of patches with [not any? turtles-here and region = "Prison"]
   ifelse (prisoncell != nobody) [move-to one-of patches with [not any? turtles-here and region = "Prison"]]
@@ -171,13 +205,12 @@ to bidePrisonTime
     if any? places [move-to one-of places]
     set inPrison? false
     set color yellow
-    set numPrisoners numPrisoners - 1
     if Debug [print (word "citizen " who "is released from prison") ]
   ]
 end
 
 to hideFromCops [nearby-police hidingplaces]
-  set fear (1 + f) * fear
+  set fear (1 + f) * fear; change this to a function in the update function section!
   let police min-one-of nearby-police [distance myself]
   if Debug [print (word " citizen: " who " hiding from cop: " police)]
   
@@ -230,9 +263,25 @@ to proactiveBehavior
   ; OBS: when changing a current state to a new and different state, some variables might need to be reset,
   ; like for example walkdesire?, destinationxy, etc.
   ;
+  ; condition old state is finished
+  ifelse finishedState [
+    set proState []
+    set counter 0
+    ; Deliberation of new states
+    ; agent is at home and figuring out what to do
+    if localxy = homeLoc [
+      ;set proState item (random 3) StateList; just for testing
+      ;if Debug [print (word who "deliberated proState at home = " proState)]
+      ; stay at home
+      set destinationxy []
+    ]
+  ][
+    ; code while the proactive state is not finished yet
+    ; test 'study'
+    set proState "Study"
+  ]
   
   ; For testing
-  set proState item (random 3) StateList
   if Debug [print (word who "deliberated proState = " proState)]
   
   
@@ -257,9 +306,22 @@ end
 
 to study
   if Debug [print (word who " is in the proactive state Study")]
-  set destinationxy one-of patches with [region = "University"]
-  if localxy = destinationxy [set counter counter + 1]
-  if counter > 3 [set destinationxy homeLoc]
+  if (not initialCondition) and (not finalCondition) [set destinationxy one-of patches with [region = "University"]]
+  if (localxy = destinationxy) and (not initialCondition) [; moment when agent arrives at university
+    set initialCondition true
+    set agTimer1 timeTaker (random 2) 45
+    if Debug [print (word who " has arrived at the university")]
+    ]
+  if initialCondition and not finalCondition [;wait until timeTaker is finished
+    if localtimeTakerDone agTimer1 [set finalCondition true]
+  ]
+  if finalCondition [
+    set finishedState true
+    set initialCondition false
+    set finalCondition false
+    if Debug [print (word who " has decided to go home from the university")]
+    set destinationxy homeLoc ; go home again
+  ]
   
 end
 
@@ -294,38 +356,3 @@ end
 
 ;""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-to-report fearValue  ; This is to get the fear of a friend
-  report fear
-end
-
-to update_fear  ; Call this when calibrating weekly fear 
-  set fear 0.5 * (glbFear + fear)
-end
-
-to update-A [nearby-police]  ; Keeping track of nearby police
-  set A count nearby-police
-end
-
-to update-C  ; Keeping track of nearby citizens
-  set C count (other citizens in-radius citizen-vision)
-end
-
-to decrease-frustration  ; decrease frustration TODO: implement when
- set vfrust vfrust * (1 - exp(- alfaFrust))
-end
-
-to increase-frustration  ; increases frustration TODO: implement when the cops forbid citizens to do what they want
-  set vfrust vfrust + 1
-end
-
-to update-anger
-  set anger vfrust * (1 - L)
-end
-
-to increase-anger
-  ifelse inPrison? [set anger anger * ( 1 + 0.1 * percAnger)][ set anger anger * ( 1 + percAnger)]
-end
-
-to decrease-anger
-  set anger anger * (1 - 10 * percAnger)
-end
