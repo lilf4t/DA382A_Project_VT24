@@ -125,5 +125,8 @@ to catch [hunted]
   if Debug [print (word " cop-agent: " who " tries to catch: " hunted)]
   face hunted 
   forward cop-speed
+  ; only allow police to be in empty regions or in TownSquare
+  let pplaces neighborhood with [region = "empty" or region = "TownSquare"]
+  if any? pplaces [move-to one-of pplaces]
 end
 
