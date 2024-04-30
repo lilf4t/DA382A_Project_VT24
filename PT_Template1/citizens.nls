@@ -267,6 +267,20 @@ to proactiveBehavior
   ; OBS: when changing a current state to a new and different state, some variables might need to be reset,
   ; like for example walkdesire?, destinationxy, etc.
   ;
+  
+  let demoUtil demonstration-utility
+  let resigUtil resignation-utility
+  
+  if (demoUtil > resigUtil) [set proState "Demonstration"]
+  
+  if (resigUtil > demoUtil) [set proState "Resignation"]
+  
+ 
+ ; For testing
+  ;set proState item (random 3) StateList
+  ;if Debug [print (word who "deliberated proState = " proState)]
+  
+  
   ; condition old state is finished
   ifelse finishedState [
     set proState []
@@ -300,6 +314,7 @@ to proactiveBehavior
     proState = "Political" [political]
     proState = "Demonstration" [demonstrate]   
     ; add more states here, the order does not matter
+    proState = "Resignation" [resignation]
   )
   
   if vWalk >= thrWalk [if proState != "WalkingAround" [increase-frustration]]
@@ -363,5 +378,71 @@ to demonstrate
   if Debug [print (word who " is in the proactive state Demonstration")]
 end
 
+to resignation
+  if Debug [print (word who " is in the proactive state Resignation")]
+end
+
+
 ;""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+to-report demonstration-utility
+  
+  let utility 0
+  
+  if (anger > thrAnger) [
+    set utility utility + (anger - thrAnger)
+  ]
+  if (anger > fear) [
+    set utility utility + (anger - fear)
+  ]
+  report utility
+end
+
+to-report resignation-utility
+  
+  let utility 0
+  
+  if (anger > thrAnger) and (fear > anger) [
+    set utility utility + (fear - anger)
+  ]
+
+  report utility
+end
+
+
+to-report fearValue  ; This is to get the fear of a friend
+  report fear
+end
+
+to update_fear  ; Call this when calibrating weekly fear 
+  set fear 0.5 * (glbFear + fear)
+end
+
+to update-A [nearby-police]  ; Keeping track of nearby police
+  set A count nearby-police
+end
+
+to update-C  ; Keeping track of nearby citizens
+  set C count (other citizens in-radius citizen-vision)
+end
+
+to decrease-frustration  ; decrease frustration TODO: implement when
+ set vfrust vfrust * (1 - exp(- alfaFrust))
+end
+
+to increase-frustration  ; increases frustration TODO: implement when the cops forbid citizens to do what they want
+  set vfrust vfrust + 1
+end
+
+to update-anger
+  set anger vfrust * (1 - L)
+end
+
+to increase-anger
+  ifelse inPrison? [set anger anger * ( 1 + 0.1 * percAnger)][ set anger anger * ( 1 + percAnger)]
+end
+
+to decrease-anger
+  set anger anger * (1 - 10 * percAnger)
+end
 
