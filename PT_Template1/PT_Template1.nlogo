@@ -56,6 +56,15 @@ globals [
   flagAfternoon;
   flagEvening ; true if it is evening
   flagWeekend ; true if it is a weekend (2-days, Saturday and Sunday)
+  tick-datetime
+  sim-time               ; The current simulation time
+  sim-start-time
+  start-time
+  time-simulated   ; Text string showing how much time has been simulated, with the units specified on the Interface
+  sim-start-logotime
+
+  timeTaker-stop-time
+
 
 
   ;----- Spatial units, locations
@@ -115,6 +124,11 @@ to setup
   ; time section
   initTime ; initialize the time and clock variables
 
+
+
+
+
+
   ; must be last in the setup-part:
   reset-ticks
   ;recorder
@@ -146,6 +160,11 @@ to go
   ;---- Update of Global Variables
   ; update of global variables like for example fear, frustration and legitimation
   ;
+  ; if dailyFlag [
+  set L (1 / (exp((newarrest / num-citizens))))
+  count-new-arrests
+  ;    set dailyFlag false
+   ; ]
 
   ; update for the observer functions like changes in number of arrests
   ;
@@ -157,12 +176,7 @@ to go
   ask turtles [
     ; based on the type of agent
     if (breed = citizens) [
-      citizen_behavior ; code as defined in the include-file "citizens.nls"
-
-      set L (1 / (exp((newarrest / num-citizens))))
-
-      count-new-arrests
-
+      citizen_behavior ; code as defined in the include-file "citizens.nls
       ]
     if (breed = cops) [
       cop_behavior ; code as defined in the include-file "cops.nls"
