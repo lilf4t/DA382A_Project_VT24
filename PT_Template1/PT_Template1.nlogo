@@ -146,6 +146,7 @@ end
 ; ########################## TO GO/ STARTING PART ########################
 ;;
 to go
+
   ;---- Time updates
   ;
   tick ;- update time
@@ -509,7 +510,7 @@ CHOOSER
 copSource
 copSource
 "rule-of-law" "arrest-troublemakers"
-0
+1
 
 MONITOR
 221
