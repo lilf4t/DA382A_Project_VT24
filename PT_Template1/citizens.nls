@@ -297,6 +297,11 @@ to proactiveBehavior
     proState = "Demonstration" [demonstrate]   
     ; add more states here, the order does not matter
   )
+  
+  if vWalk >= thrWalk [if proState != "WalkingAround" [increase-frustration]]
+  if vMeet >= thrMeet [if proState != "MeetingFriends" [increase-frustration]]
+  if vRest >= thrRest [if proState != "Go_out" [increase-frustration]]
+  if vCinema >= thrCinema [if proState != "Go_out" [increase-frustration]]  ; TODO?
  
   
 end
