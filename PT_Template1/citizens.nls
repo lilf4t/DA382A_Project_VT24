@@ -90,7 +90,7 @@ to setup-citizens
     set walkdesire? false
     set counter 0 ; all-purpose counter
     set f 0.05
-    set fear 0.01
+    set fear 0.1
     set risk random-float 1.0
     set finishedState false
     set initialCondition false
@@ -101,6 +101,7 @@ end
 
 
 to citizen_behavior
+  print (word who "Fear: " fearValue)
   
 ;########## UPDATING the Beliefs, e.g. the agent's information about its environment ##############
   
