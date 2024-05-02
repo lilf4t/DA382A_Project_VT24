@@ -65,6 +65,7 @@ citizens-own [
   finalCondition; ----flag to indicate if the final condition is met
   safespot;---------- indicates if the current spot is save (not empty and not TownSquare)
   agTimer1;---------- local timer for agents
+  weeklyFlag
   
 ]
 
@@ -95,6 +96,7 @@ to setup-citizens
     set finishedState false
     set initialCondition false
     set finalCondition false
+    set weeklyFlag false
   ]
 
 end
@@ -123,11 +125,11 @@ ifelse (region != "empty" and region != "TownSquare") [set safespot true][set sa
 ;--- update the local values for pArrest, risk, fear, etc
 set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updated here
 ;--- update once a week
-; if weeklyFlag [
-  
-  ;update_fear
-  ;set weeklyFlag false
-  ;]
+  if weeklyFlag [
+    
+    update_fear
+    set weeklyFlag false
+  ]
 
 ;################## REACTIVE BEHAVIOR ####################################
 ; subsumption hierarchy with highest priority in first if-sentence
@@ -385,16 +387,8 @@ to-report fearValue  ; This is to get the fear of a friend
   report fear
 end
 
-to update_fear  ; Call this when calibrating weekly fear 
+to update_fear  ; Call this when calibrating weekly fear
   set fear 0.5 * (glbFear + fear)
-end
-
-to update-A [nearby-police]  ; Keeping track of nearby police
-  set A count nearby-police
-end
-
-to update-C  ; Keeping track of nearby citizens
-  set C count (other citizens in-radius citizen-vision)
 end
 
 to decrease-frustration  ; decrease frustration TODO: implement when
