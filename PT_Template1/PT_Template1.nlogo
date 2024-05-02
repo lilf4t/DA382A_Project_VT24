@@ -240,7 +240,7 @@ GRAPHICS-WINDOW
 0
 1
 ticks
-30.0
+60.0
 
 SLIDER
 23
@@ -251,7 +251,7 @@ num-citizens
 num-citizens
 1
 150
-6.0
+21.0
 1
 1
 NIL
