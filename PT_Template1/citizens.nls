@@ -65,6 +65,7 @@ citizens-own [
   finalCondition; ----flag to indicate if the final condition is met
   safespot;---------- indicates if the current spot is save (not empty and not TownSquare)
   agTimer1;---------- local timer for agents
+  weeklyFlag
   
 ]
 
@@ -89,19 +90,21 @@ to setup-citizens
     set destinationxy []
     set walkdesire? false
     set counter 0 ; all-purpose counter
+    set k 3.03  ; constant for finetuned arrest probability
     set f 0.05
     set fear 0.1
     set risk random-float 1.0
     set finishedState false
     set initialCondition false
     set finalCondition false
+    set weeklyFlag false
   ]
 
 end
 
 
 to citizen_behavior
-  print (word who "Fear: " fearValue)
+  if Debug [print (word who " has fear: " fearValue)]
   
 ;########## UPDATING the Beliefs, e.g. the agent's information about its environment ##############
   
@@ -123,11 +126,11 @@ ifelse (region != "empty" and region != "TownSquare") [set safespot true][set sa
 ;--- update the local values for pArrest, risk, fear, etc
 set pArrest 1 - exp((- k * C) / (A + 1))  ; probability of being arrested, updated here
 ;--- update once a week
-; if weeklyFlag [
-  
-  ;update_fear
-  ;set weeklyFlag false
-  ;]
+  if weeklyFlag [
+    
+    update_fear
+    set weeklyFlag false
+  ]
 
 ;################## REACTIVE BEHAVIOR ####################################
 ; subsumption hierarchy with highest priority in first if-sentence
@@ -155,7 +158,7 @@ end
 ; if asked to go to prison  
 to gotoprison 
   set fear (1 + 10 * f) * fear ; change this to a function in the update function section!
-  print (word "citizen " who " has fear: " fear)
+  if Debug [print (word "citizen " who " has fear: " fear)]
   ; set flag
   set inPrison? true
   set color red
@@ -385,16 +388,8 @@ to-report fearValue  ; This is to get the fear of a friend
   report fear
 end
 
-to update_fear  ; Call this when calibrating weekly fear 
+to update_fear  ; Call this when calibrating weekly fear
   set fear 0.5 * (glbFear + fear)
-end
-
-to update-A [nearby-police]  ; Keeping track of nearby police
-  set A count nearby-police
-end
-
-to update-C  ; Keeping track of nearby citizens
-  set C count (other citizens in-radius citizen-vision)
 end
 
 to decrease-frustration  ; decrease frustration TODO: implement when
